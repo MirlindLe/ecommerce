@@ -221,26 +221,51 @@ function KPICard({
   subValue,
   change,
   isWarning,
+  pill,
 }: {
   title: string;
   value: string;
   subValue?: string;
   change?: { value: string; positive: boolean };
   isWarning?: boolean;
+  pill?: string;
 }) {
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
-      <p className="text-sm font-medium text-gray-500 mb-2">{title}</p>
+    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between h-full">
+      <div className="flex justify-between items-start mb-2">
+        <p className="text-sm font-medium text-gray-500">{title}</p>
+        {isWarning && (
+          <svg
+            className="w-5 h-5 text-amber-500"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+        )}
+      </div>
       <div className="flex items-end justify-between">
-        <div>
+        <div className="flex items-baseline gap-2">
           <p className="text-3xl font-bold tracking-tight text-gray-900">
             {value}
           </p>
-          {subValue && <p className="text-sm text-gray-400 mt-1">{subValue}</p>}
+          {subValue && (
+            <p className="text-sm text-gray-400 font-medium">{subValue}</p>
+          )}
+          {pill && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 transform -translate-y-1">
+              {pill}
+            </span>
+          )}
         </div>
+
         {change && (
           <span
-            className={`text-xs font-semibold px-2.5 py-1 rounded-md ${
+            className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
               change.positive
                 ? "bg-emerald-50 text-emerald-600"
                 : "bg-red-50 text-red-500"
@@ -251,74 +276,59 @@ function KPICard({
           </span>
         )}
         {isWarning && (
-          <div className="flex items-center gap-1.5">
-            <svg
-              className="w-5 h-5 text-amber-500"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-50 text-red-500">
-              -0.4%
-            </span>
-          </div>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-50 text-red-500">
+            -0.4%
+          </span>
         )}
       </div>
     </div>
   );
 }
 
-// Sales Chart Component (simplified area chart)
+// Sales Chart Component (updated with purple/violet theme)
 function SalesChart({ period }: { period: TimePeriod }) {
   return (
-    <div className="relative h-48 w-full">
+    <div className="relative h-64 w-full mt-4">
       <svg
         className="w-full h-full"
         viewBox="0 0 800 200"
         preserveAspectRatio="none"
       >
-        {/* Grid lines */}
         <defs>
           <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.3" />
-            <stop
-              offset="100%"
-              stopColor="rgb(99, 102, 241)"
-              stopOpacity="0.02"
-            />
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
           </linearGradient>
         </defs>
 
-        {/* Horizontal grid lines */}
+        {/* Grid lines */}
         {[0, 1, 2, 3, 4].map((i) => (
           <line
             key={i}
             x1="0"
-            y1={40 + i * 35}
+            y1={20 + i * 40}
             x2="800"
-            y2={40 + i * 35}
-            stroke="#f1f5f9"
+            y2={20 + i * 40}
+            stroke="#f3f4f6"
             strokeWidth="1"
+            strokeDasharray="4 4"
           />
         ))}
 
         {/* Area fill */}
         <path
-          d="M 0 180 Q 100 170, 150 160 T 300 140 T 450 120 T 550 100 T 650 90 T 800 70 L 800 200 L 0 200 Z"
+          d="M 0 180 Q 100 170, 150 160 T 300 140 T 450 120 T 550 100 T 650 90 T 800 50 L 800 200 L 0 200 Z"
           fill="url(#chartGradient)"
         />
 
         {/* Line */}
         <path
-          d="M 0 180 Q 100 170, 150 160 T 300 140 T 450 120 T 550 100 T 650 90 T 800 70"
+          d="M 0 180 Q 100 170, 150 160 T 300 140 T 450 120 T 550 100 T 650 90 T 800 50"
           fill="none"
-          stroke="rgb(99, 102, 241)"
-          strokeWidth="2.5"
+          stroke="#8b5cf6"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       </svg>
     </div>
@@ -359,7 +369,7 @@ export default function AuraDashboard() {
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span className="text-white font-bold text-lg tracking-tight">
+            <span className="text-white font-bold text-lg tracking-widest">
               AURA COMMERCE.
             </span>
           </div>
@@ -555,7 +565,7 @@ export default function AuraDashboard() {
               value="$45,230"
               change={{ value: "12%", positive: true }}
             />
-            <KPICard title="Active Orders" value="124" subValue="8 pending" />
+            <KPICard title="Active Orders" value="124" pill="8 pending" />
             <KPICard
               title="New Customers"
               value="89"
