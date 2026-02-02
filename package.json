@@ -1,0 +1,26 @@
+{
+  "name": "ecommerce-platform",
+  "version": "1.0.0",
+  "main": "index.js",
+  "workspaces": [
+    "apps/admin",
+    "apps/web",
+    "apps/api",
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:admin": "npm --workspace=apps/admin run dev",
+    "dev:web": "npm --workspace=apps/web run dev",
+    "dev:api": "npm --workspace=apps/api run start:dev",
+    "dev:all": "concurrently \"npm:dev:admin\" \"npm:dev:web\" \"npm:dev:api\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0"
+  }
+}
