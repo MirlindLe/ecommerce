@@ -99,7 +99,29 @@ function App() {
             }
           />
 
-          {/* Protected Routes */}
+          {/* Main Admin Dashboard with Aura Design */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <AuraDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Legacy dashboard */}
+          <Route
+            path="/old-dashboard"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+          </Route>
+
+          {/* Protected Routes with Layout */}
           <Route
             path="/"
             element={
@@ -108,8 +130,6 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Dashboard />} />
-
             {/* Products */}
             <Route path="products" element={<ProductsList />} />
             <Route path="products/new" element={<ProductForm />} />
@@ -132,16 +152,6 @@ function App() {
             {/* Settings */}
             <Route path="settings" element={<Settings />} />
           </Route>
-
-          {/* Aura Dashboard - Full page standalone */}
-          <Route
-            path="/aura"
-            element={
-              <ProtectedRoute>
-                <AuraDashboard />
-              </ProtectedRoute>
-            }
-          />
 
           {/* Catch all - redirect to dashboard */}
           <Route path="*" element={<Navigate to="/" replace />} />

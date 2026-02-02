@@ -44,7 +44,7 @@ const topProducts: Product[] = [
 
 // Navigation items matching Figma
 const primaryNavItems = [
-  { name: "Dashboard", href: "/aura", icon: "dashboard" },
+  { name: "Dashboard", href: "/", icon: "dashboard" },
   { name: "Orders", href: "/orders", icon: "orders" },
   { name: "Products", href: "/products", icon: "products" },
   { name: "Customers", href: "/customers", icon: "customers" },
@@ -339,7 +339,7 @@ export default function AuraDashboard() {
   };
 
   const isActiveRoute = (href: string) => {
-    if (href === "/aura") return location.pathname === "/aura";
+    if (href === "/") return location.pathname === "/";
     return location.pathname.startsWith(href);
   };
 
