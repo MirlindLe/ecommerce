@@ -1,845 +1,673 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../lib/store";
-import { cn } from "../lib/utils";
 
 // Types
-interface KPICardProps {
-  title: string;
-  value: string;
-  change: number;
-  changeLabel: string;
-  icon: React.ReactNode;
-}
+type TimePeriod = "Daily" | "Weekly" | "Monthly";
+type OrderStatus = "Paid" | "Pending" | "Shipped";
 
 interface Order {
   id: string;
   customer: string;
-  email: string;
-  status: "Paid" | "Pending" | "Shipped" | "Cancelled";
-  amount: number;
-  date: string;
+  status: OrderStatus;
+  amount: string;
 }
 
-interface TopProduct {
-  id: string;
+interface Product {
   name: string;
+  unitsSold: number;
   image: string;
-  units: number;
-  revenue: number;
 }
 
-// Navigation items
-const primaryNavItems = [
-  { name: "Dashboard", href: "/", icon: DashboardIcon },
-  { name: "Orders", href: "/orders", icon: OrdersIcon },
-  { name: "Products", href: "/products", icon: ProductsIcon },
-  { name: "Customers", href: "/customers", icon: CustomersIcon },
-  { name: "Analytics", href: "/analytics", icon: AnalyticsIcon },
-];
-
-// Mock data
+// Mock Data matching Figma exactly
 const recentOrders: Order[] = [
+  { id: "22120000", customer: "Just Garnin", status: "Paid", amount: "$35.30" },
   {
-    id: "ORD-7352",
-    customer: "Sarah Johnson",
-    email: "sarah@example.com",
-    status: "Paid",
-    amount: 245.99,
-    date: "2 min ago",
-  },
-  {
-    id: "ORD-7351",
-    customer: "Michael Chen",
-    email: "michael@example.com",
-    status: "Shipped",
-    amount: 189.5,
-    date: "15 min ago",
-  },
-  {
-    id: "ORD-7350",
-    customer: "Emily Davis",
-    email: "emily@example.com",
+    id: "22130001",
+    customer: "Duin Pxincn",
     status: "Pending",
-    amount: 432.0,
-    date: "1 hour ago",
+    amount: "$10.00",
   },
   {
-    id: "ORD-7349",
-    customer: "James Wilson",
-    email: "james@example.com",
-    status: "Paid",
-    amount: 78.25,
-    date: "2 hours ago",
-  },
-  {
-    id: "ORD-7348",
-    customer: "Anna Martinez",
-    email: "anna@example.com",
-    status: "Cancelled",
-    amount: 156.8,
-    date: "3 hours ago",
+    id: "22120002",
+    customer: "Custom-Cannen",
+    status: "Shipped",
+    amount: "$23.00",
   },
 ];
 
-const topProducts: TopProduct[] = [
-  {
-    id: "1",
-    name: "Wireless Earbuds Pro",
-    image: "/placeholder.jpg",
-    units: 234,
-    revenue: 23400,
-  },
-  {
-    id: "2",
-    name: "Smart Watch Series X",
-    image: "/placeholder.jpg",
-    units: 186,
-    revenue: 37200,
-  },
-  {
-    id: "3",
-    name: "Premium Leather Bag",
-    image: "/placeholder.jpg",
-    units: 145,
-    revenue: 14500,
-  },
-  {
-    id: "4",
-    name: "Minimalist Desk Lamp",
-    image: "/placeholder.jpg",
-    units: 128,
-    revenue: 6400,
-  },
+const topProducts: Product[] = [
+  { name: "Product Name 1", unitsSold: 18, image: "" },
+  { name: "Product Name 2", unitsSold: 13, image: "" },
+  { name: "Product Name 3", unitsSold: 6, image: "" },
+];
+
+// Navigation items matching Figma
+const primaryNavItems = [
+  { name: "Dashboard", href: "/aura", icon: "dashboard" },
+  { name: "Orders", href: "/orders", icon: "orders" },
+  { name: "Products", href: "/products", icon: "products" },
+  { name: "Customers", href: "/customers", icon: "customers" },
+  { name: "Analytics", href: "/analytics", icon: "analytics" },
+];
+
+const secondaryNavItems = [
+  { name: "Discounts", href: "/discounts", icon: "discounts" },
+  { name: "Reviews", href: "/reviews", icon: "reviews" },
+  { name: "Marketing", href: "/marketing", icon: "marketing" },
+];
+
+const bottomNavItems = [
+  { name: "Settings", href: "/settings", icon: "settings" },
+  { name: "Support", href: "/support", icon: "support" },
 ];
 
 // Icon Components
-function DashboardIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 12a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1v-7z"
-      />
-    </svg>
-  );
-}
-
-function OrdersIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-      />
-    </svg>
-  );
-}
-
-function ProductsIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-      />
-    </svg>
-  );
-}
-
-function CustomersIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-      />
-    </svg>
-  );
-}
-
-function AnalyticsIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-      />
-    </svg>
-  );
-}
-
-function SettingsIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-    </svg>
-  );
-}
-
-function LogoutIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-      />
-    </svg>
-  );
-}
-
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-      />
-    </svg>
-  );
-}
-
-function BellIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-      />
-    </svg>
-  );
-}
-
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 4v16m8-8H4"
-      />
-    </svg>
-  );
-}
-
-// KPI Card Component
-function KPICard({ title, value, change, changeLabel, icon }: KPICardProps) {
-  const isPositive = change >= 0;
-
-  return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 tracking-tight">
-            {value}
-          </p>
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-                isPositive
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "bg-red-50 text-red-700"
-              )}
-            >
-              {isPositive ? (
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 10l7-7m0 0l7 7m-7-7v18"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                  />
-                </svg>
-              )}
-              {Math.abs(change)}%
-            </span>
-            <span className="text-xs text-gray-500">{changeLabel}</span>
-          </div>
-        </div>
-        <div className="p-3 bg-purple-50 rounded-xl">{icon}</div>
-      </div>
-    </div>
-  );
+function NavIcon({ name, className }: { name: string; className?: string }) {
+  const icons: Record<string, JSX.Element> = {
+    dashboard: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="4" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="11" width="7" height="10" rx="1" />
+      </svg>
+    ),
+    orders: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        <path d="M9 12h6M9 16h6" />
+      </svg>
+    ),
+    products: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+    ),
+    customers: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+      </svg>
+    ),
+    analytics: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M18 20V10M12 20V4M6 20v-6" />
+      </svg>
+    ),
+    discounts: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    reviews: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+      </svg>
+    ),
+    marketing: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+      </svg>
+    ),
+    settings: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    support: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    logout: (
+      <svg
+        className={className}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      >
+        <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+    ),
+  };
+  return icons[name] || null;
 }
 
 // Status Badge Component
-function StatusBadge({ status }: { status: Order["status"] }) {
-  const styles = {
-    Paid: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    Pending: "bg-amber-50 text-amber-700 border-amber-200",
-    Shipped: "bg-blue-50 text-blue-700 border-blue-200",
-    Cancelled: "bg-red-50 text-red-700 border-red-200",
+function StatusBadge({ status }: { status: OrderStatus }) {
+  const styles: Record<OrderStatus, string> = {
+    Paid: "bg-emerald-100 text-emerald-700",
+    Pending: "bg-amber-100 text-amber-700",
+    Shipped: "bg-blue-100 text-blue-700",
   };
 
   return (
     <span
-      className={cn(
-        "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border",
-        styles[status]
-      )}
+      className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status]}`}
     >
       {status}
     </span>
   );
 }
 
-// Area Chart Placeholder
-function AreaChartPlaceholder() {
+// KPI Card Component
+function KPICard({
+  title,
+  value,
+  subValue,
+  change,
+  isWarning,
+}: {
+  title: string;
+  value: string;
+  subValue?: string;
+  change?: { value: string; positive: boolean };
+  isWarning?: boolean;
+}) {
   return (
-    <div className="h-64 flex items-end justify-between gap-2 px-4">
-      {[40, 65, 45, 80, 55, 75, 90, 60, 85, 70, 95, 80].map((height, i) => (
-        <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <div
-            className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-sm opacity-80"
-            style={{ height: `${height}%` }}
-          />
-          <span className="text-[10px] text-gray-400">
-            {
-              [
-                "Jan",
-                "Feb",
-                "Mar",
-                "Apr",
-                "May",
-                "Jun",
-                "Jul",
-                "Aug",
-                "Sep",
-                "Oct",
-                "Nov",
-                "Dec",
-              ][i]
-            }
-          </span>
+    <div className="bg-white rounded-xl p-5 border border-gray-100">
+      <p className="text-sm text-gray-500 mb-1">{title}</p>
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-2xl font-semibold text-gray-900">{value}</p>
+          {subValue && <p className="text-xs text-gray-400 mt-1">{subValue}</p>}
         </div>
-      ))}
+        {change && (
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded ${
+              change.positive
+                ? "bg-emerald-50 text-emerald-600"
+                : "bg-red-50 text-red-500"
+            }`}
+          >
+            {change.positive ? "+" : ""}
+            {change.value}
+          </span>
+        )}
+        {isWarning && (
+          <div className="flex items-center gap-1">
+            <svg
+              className="w-4 h-4 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span className="text-xs font-medium text-red-500">-0.4%</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// Main Dashboard Component
+// Sales Chart Component (simplified area chart)
+function SalesChart({ period }: { period: TimePeriod }) {
+  return (
+    <div className="relative h-48 w-full">
+      <svg
+        className="w-full h-full"
+        viewBox="0 0 800 200"
+        preserveAspectRatio="none"
+      >
+        {/* Grid lines */}
+        <defs>
+          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.3" />
+            <stop
+              offset="100%"
+              stopColor="rgb(99, 102, 241)"
+              stopOpacity="0.02"
+            />
+          </linearGradient>
+        </defs>
+
+        {/* Horizontal grid lines */}
+        {[0, 1, 2, 3, 4].map((i) => (
+          <line
+            key={i}
+            x1="0"
+            y1={40 + i * 35}
+            x2="800"
+            y2={40 + i * 35}
+            stroke="#f1f5f9"
+            strokeWidth="1"
+          />
+        ))}
+
+        {/* Area fill */}
+        <path
+          d="M 0 180 Q 100 170, 150 160 T 300 140 T 450 120 T 550 100 T 650 90 T 800 70 L 800 200 L 0 200 Z"
+          fill="url(#chartGradient)"
+        />
+
+        {/* Line */}
+        <path
+          d="M 0 180 Q 100 170, 150 160 T 300 140 T 450 120 T 550 100 T 650 90 T 800 70"
+          fill="none"
+          stroke="rgb(99, 102, 241)"
+          strokeWidth="2.5"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export default function AuraDashboard() {
-  const { pathname } = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
-  const { logout, user } = useAuthStore();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [chartPeriod, setChartPeriod] = useState<
-    "Daily" | "Weekly" | "Monthly"
-  >("Monthly");
+  const { user, logout } = useAuthStore();
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("Daily");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname.startsWith(href);
+  const isActiveRoute = (href: string) => {
+    if (href === "/aura") return location.pathname === "/aura";
+    return location.pathname.startsWith(href);
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 font-['Inter',sans-serif]">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside
-        className={cn(
-          "flex flex-col bg-slate-900 transition-all duration-300 ease-in-out",
-          sidebarCollapsed ? "w-20" : "w-64"
-        )}
-      >
+      <aside className="w-56 bg-slate-900 flex flex-col fixed h-full">
         {/* Logo */}
-        <div className="flex items-center h-16 px-4 border-b border-slate-800">
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="flex items-center gap-3 w-full"
-          >
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center flex-shrink-0">
+        <div className="px-5 py-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
               <svg
-                className="w-6 h-6 text-white"
-                fill="none"
+                className="w-5 h-5 text-white"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
+                fill="currentColor"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
-            {!sidebarCollapsed && (
-              <span className="text-base font-bold text-white tracking-wide whitespace-nowrap">
-                AURA COMMERCE
-              </span>
-            )}
-          </button>
+            <span className="text-white font-bold text-lg tracking-tight">
+              AURA COMMERCE.
+            </span>
+          </div>
         </div>
 
-        {/* Main Navigation */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-          {primaryNavItems.map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200",
-                isActive(item.href)
-                  ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
-              )}
-            >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!sidebarCollapsed && (
-                <span className="text-sm font-medium">{item.name}</span>
-              )}
-            </Link>
-          ))}
+        {/* Primary Navigation */}
+        <nav className="flex-1 px-3 mt-2">
+          <ul className="space-y-1">
+            {primaryNavItems.map((item) => (
+              <li key={item.name}>
+                <Link
+                  to={item.href}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActiveRoute(item.href)
+                      ? "bg-indigo-600 text-white"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                  }`}
+                >
+                  <NavIcon name={item.icon} className="w-5 h-5" />
+                  {item.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {/* Secondary Section */}
+          <div className="mt-8">
+            <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+              Secondary
+            </p>
+            <ul className="space-y-1">
+              {secondaryNavItems.map((item) => (
+                <li key={item.name}>
+                  <Link
+                    to={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                      isActiveRoute(item.href)
+                        ? "bg-indigo-600 text-white"
+                        : "text-slate-400 hover:text-white hover:bg-slate-800"
+                    }`}
+                  >
+                    <NavIcon name={item.icon} className="w-5 h-5" />
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="px-3 py-4 border-t border-slate-800 space-y-1">
-          <Link
-            to="/settings"
-            className={cn(
-              "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200",
-              isActive("/settings")
-                ? "bg-purple-600 text-white"
-                : "text-slate-400 hover:bg-slate-800 hover:text-white"
-            )}
-          >
-            <SettingsIcon className="w-5 h-5 flex-shrink-0" />
-            {!sidebarCollapsed && (
-              <span className="text-sm font-medium">Settings</span>
-            )}
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-3 rounded-lg w-full text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
-          >
-            <LogoutIcon className="w-5 h-5 flex-shrink-0" />
-            {!sidebarCollapsed && (
-              <span className="text-sm font-medium">Logout</span>
-            )}
-          </button>
+        <div className="px-3 pb-4 mt-auto border-t border-slate-800 pt-4">
+          <ul className="space-y-1">
+            {bottomNavItems.map((item) => (
+              <li key={item.name}>
+                <Link
+                  to={item.href}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                >
+                  <NavIcon name={item.icon} className="w-5 h-5" />
+                  {item.name}
+                </Link>
+              </li>
+            ))}
+            <li>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors w-full"
+              >
+                <NavIcon name="logout" className="w-5 h-5" />
+                Logout
+                <span className="ml-auto w-2 h-2 bg-emerald-500 rounded-full"></span>
+              </button>
+            </li>
+          </ul>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 ml-56">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          {/* Search */}
-          <div className="flex-1 max-w-lg">
-            <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search orders, products, customers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              />
-            </div>
-          </div>
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+          <div className="flex items-center justify-between px-6 py-4">
+            {/* Title */}
+            <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
-              <PlusIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">New Sale</span>
-            </button>
-
-            {/* Notifications */}
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-              <BellIcon className="w-6 h-6" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
-
-            {/* Profile */}
-            <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-gray-900">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <p className="text-xs text-gray-500">Administrator</p>
+            {/* Search */}
+            <div className="flex-1 max-w-md mx-8">
+              <div className="relative">
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search orders, SKU, or customers"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-medium">
-                {user?.firstName?.charAt(0)}
-                {user?.lastName?.charAt(0)}
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-4">
+              {/* New Sale Button */}
+              <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                New Sale
+              </button>
+
+              {/* Notification Bell */}
+              <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
+                </svg>
+              </button>
+
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 hover:bg-gray-100 rounded-lg p-1.5 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold">
+                      {user?.firstName?.charAt(0) || "A"}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    Admin User
+                  </span>
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
+                    <Link
+                      to="/settings"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Profile Settings
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          {/* Page Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Welcome back! Here's what's happening with your store.
-            </p>
-          </div>
-
+        {/* Dashboard Content */}
+        <div className="p-6">
           {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          <div className="grid grid-cols-4 gap-4 mb-6">
             <KPICard
               title="Total Revenue"
               value="$45,230"
-              change={12.5}
-              changeLabel="vs last month"
-              icon={
-                <svg
-                  className="w-6 h-6 text-purple-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              }
+              change={{ value: "12%", positive: true }}
             />
-            <KPICard
-              title="Active Orders"
-              value="124"
-              change={8.2}
-              changeLabel="vs last week"
-              icon={
-                <svg
-                  className="w-6 h-6 text-purple-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                  />
-                </svg>
-              }
-            />
+            <KPICard title="Active Orders" value="124" subValue="8 pending" />
             <KPICard
               title="New Customers"
               value="89"
-              change={-2.4}
-              changeLabel="vs last month"
-              icon={
-                <svg
-                  className="w-6 h-6 text-purple-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                  />
-                </svg>
-              }
+              change={{ value: "5%", positive: true }}
             />
-            <KPICard
-              title="Conversion Rate"
-              value="3.2%"
-              change={0.8}
-              changeLabel="vs last week"
-              icon={
-                <svg
-                  className="w-6 h-6 text-purple-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                  />
-                </svg>
-              }
-            />
+            <KPICard title="Conversion Rate" value="3.2%" isWarning={true} />
           </div>
 
           {/* Sales Chart */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Sales over time
-                </h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  Revenue performance for the selected period
-                </p>
-              </div>
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                {(["Daily", "Weekly", "Monthly"] as const).map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setChartPeriod(period)}
-                    className={cn(
-                      "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
-                      chartPeriod === period
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    )}
-                  >
-                    {period}
-                  </button>
-                ))}
+          <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-900">
+                Sales over time
+              </h2>
+              <div className="flex bg-gray-100 rounded-lg p-0.5">
+                {(["Daily", "Weekly", "Monthly"] as TimePeriod[]).map(
+                  (period) => (
+                    <button
+                      key={period}
+                      onClick={() => setTimePeriod(period)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                        timePeriod === period
+                          ? "bg-white text-gray-900 shadow-sm"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      {period}
+                    </button>
+                  ),
+                )}
               </div>
             </div>
-            <AreaChartPlaceholder />
+            <SalesChart period={timePeriod} />
           </div>
 
-          {/* Bottom Section - Tables */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Orders - 2/3 width */}
-            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Recent Orders
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                      Latest transactions from your store
-                    </p>
-                  </div>
-                  <Link
-                    to="/orders"
-                    className="text-sm font-medium text-purple-600 hover:text-purple-700 transition-colors"
-                  >
-                    View all →
-                  </Link>
-                </div>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                        Order ID
-                      </th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                        Customer
-                      </th>
-                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                        Status
-                      </th>
-                      <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-6 py-3">
-                        Amount
-                      </th>
+          {/* Bottom Section: Recent Orders & Top Products */}
+          <div className="grid grid-cols-3 gap-6">
+            {/* Recent Orders - Takes 2 columns */}
+            <div className="col-span-2 bg-white rounded-xl border border-gray-100 p-5">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">
+                Recent Orders
+              </h2>
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="pb-3">Order ID</th>
+                    <th className="pb-3">Customer</th>
+                    <th className="pb-3">Status</th>
+                    <th className="pb-3 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {recentOrders.map((order) => (
+                    <tr key={order.id} className="text-sm">
+                      <td className="py-3 text-gray-900 font-medium">
+                        {order.id}
+                      </td>
+                      <td className="py-3 text-gray-600">{order.customer}</td>
+                      <td className="py-3">
+                        <StatusBadge status={order.status} />
+                      </td>
+                      <td className="py-3 text-right text-gray-900">
+                        {order.amount}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {recentOrders.map((order) => (
-                      <tr
-                        key={order.id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <span className="text-sm font-medium text-gray-900">
-                            {order.id}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {order.customer}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {order.email}
-                            </p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <StatusBadge status={order.status} />
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-sm font-semibold text-gray-900">
-                            ${order.amount.toFixed(2)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            {/* Top Selling Products - 1/3 width */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      Top Selling
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-0.5">
-                      Best performers this month
-                    </p>
-                  </div>
-                  <Link
-                    to="/products"
-                    className="text-sm font-medium text-purple-600 hover:text-purple-700 transition-colors"
-                  >
-                    View all →
-                  </Link>
-                </div>
-              </div>
-              <div className="p-4 space-y-4">
-                {topProducts.map((product, index) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-lg text-sm font-semibold text-gray-600">
-                      {index + 1}
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-gray-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {product.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {product.units} units sold
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-900">
-                        ${(product.revenue / 1000).toFixed(1)}k
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Top Selling Products - Takes 1 column */}
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">
+                Top Selling Products
+              </h2>
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="pb-3">Product Name</th>
+                    <th className="pb-3 text-right">Units Sold</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {topProducts.map((product, index) => (
+                    <tr key={index} className="text-sm">
+                      <td className="py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <svg
+                              className="w-4 h-4 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                          <span className="text-gray-900">{product.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-right text-gray-600">
+                        {product.unitsSold}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
