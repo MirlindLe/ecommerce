@@ -232,7 +232,7 @@ function KPICard({
 }) {
   return (
     <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between h-full">
-      <div className="flex justify-between items-start mb-2">
+      <div className="flex justify-between items-start mb-4">
         <p className="text-sm font-medium text-gray-500">{title}</p>
         {isWarning && (
           <svg
@@ -248,16 +248,16 @@ function KPICard({
           </svg>
         )}
       </div>
-      <div className="flex items-end justify-between">
-        <div className="flex items-baseline gap-2">
-          <p className="text-3xl font-bold tracking-tight text-gray-900">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <p className="text-3xl font-bold tracking-tight text-gray-900 leading-none">
             {value}
           </p>
           {subValue && (
             <p className="text-sm text-gray-400 font-medium">{subValue}</p>
           )}
           {pill && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 transform -translate-y-1">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
               {pill}
             </span>
           )}
@@ -265,19 +265,40 @@ function KPICard({
 
         {change && (
           <span
-            className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+            className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 ${
               change.positive
                 ? "bg-emerald-50 text-emerald-600"
                 : "bg-red-50 text-red-500"
             }`}
           >
-            {change.positive ? "+" : ""}
+            {change.positive ? (
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+              >
+                <path d="M12 19V5M5 12l7-7 7 7" />
+              </svg>
+            ) : null}
             {change.value}
           </span>
         )}
         {isWarning && (
-          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-50 text-red-500">
-            -0.4%
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-50 text-red-500 flex items-center gap-1">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+            >
+              <path d="M12 5v14M19 12l-7 7-7-7" />
+            </svg>
+            0.4%
           </span>
         )}
       </div>
@@ -285,48 +306,48 @@ function KPICard({
   );
 }
 
-// Sales Chart Component (updated with purple/violet theme)
+// Sales Chart Component (updated with smoother bezier curves and taller height)
 function SalesChart({ period }: { period: TimePeriod }) {
   return (
-    <div className="relative h-64 w-full mt-4">
+    <div className="relative h-96 w-full mt-6">
       <svg
         className="w-full h-full"
-        viewBox="0 0 800 200"
+        viewBox="0 0 1000 400"
         preserveAspectRatio="none"
       >
         <defs>
           <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2" />
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.15" />
             <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
           </linearGradient>
         </defs>
 
         {/* Grid lines */}
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <line
             key={i}
             x1="0"
-            y1={20 + i * 40}
-            x2="800"
-            y2={20 + i * 40}
-            stroke="#f3f4f6"
+            y1={i * 70 + 40}
+            x2="1000"
+            y2={i * 70 + 40}
+            stroke="#f1f5f9"
             strokeWidth="1"
             strokeDasharray="4 4"
           />
         ))}
 
-        {/* Area fill */}
+        {/* Area fill - Smooth Bezier Curve */}
         <path
-          d="M 0 180 Q 100 170, 150 160 T 300 140 T 450 120 T 550 100 T 650 90 T 800 50 L 800 200 L 0 200 Z"
+          d="M0,350 C200,340 300,320 400,280 C550,220 700,180 850,140 C950,110 980,80 1000,60 L1000,400 L0,400 Z"
           fill="url(#chartGradient)"
         />
 
-        {/* Line */}
+        {/* Line - Matching Bezier Curve */}
         <path
-          d="M 0 180 Q 100 170, 150 160 T 300 140 T 450 120 T 550 100 T 650 90 T 800 50"
+          d="M0,350 C200,340 300,320 400,280 C550,220 700,180 850,140 C950,110 980,80 1000,60"
           fill="none"
           stroke="#8b5cf6"
-          strokeWidth="3"
+          strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -356,7 +377,7 @@ export default function AuraDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
       {/* Sidebar */}
-      <aside className="w-60 bg-slate-950 flex flex-col fixed h-full border-r border-white/10">
+      <aside className="w-60 bg-slate-950 flex flex-col fixed h-full">
         {/* Logo */}
         <div className="px-5 py-6">
           <div className="flex items-center gap-2">
@@ -369,7 +390,7 @@ export default function AuraDashboard() {
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span className="text-white font-bold text-lg tracking-widest">
+            <span className="text-white font-bold text-lg tracking-tight">
               AURA COMMERCE.
             </span>
           </div>
@@ -421,7 +442,7 @@ export default function AuraDashboard() {
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="px-4 pb-6 mt-auto border-t border-white/10 pt-6">
+        <div className="px-4 pb-6 mt-auto pt-6">
           <ul className="space-y-2">
             {bottomNavItems.map((item) => (
               <li key={item.name}>
@@ -485,7 +506,7 @@ export default function AuraDashboard() {
             {/* Right Actions */}
             <div className="flex items-center gap-4">
               {/* New Sale Button */}
-              <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <button className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-indigo-200">
                 New Sale
               </button>
 
