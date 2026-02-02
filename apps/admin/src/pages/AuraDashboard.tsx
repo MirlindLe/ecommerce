@@ -200,14 +200,14 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
 // Status Badge Component
 function StatusBadge({ status }: { status: OrderStatus }) {
   const styles: Record<OrderStatus, string> = {
-    Paid: "bg-emerald-100 text-emerald-700",
-    Pending: "bg-amber-100 text-amber-700",
-    Shipped: "bg-blue-100 text-blue-700",
+    Paid: "bg-emerald-50 text-emerald-600",
+    Pending: "bg-amber-50 text-amber-600",
+    Shipped: "bg-blue-50 text-blue-600",
   };
 
   return (
     <span
-      className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status]}`}
+      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${styles[status]}`}
     >
       {status}
     </span>
@@ -229,16 +229,18 @@ function KPICard({
   isWarning?: boolean;
 }) {
   return (
-    <div className="bg-white rounded-xl p-5 border border-gray-100">
-      <p className="text-sm text-gray-500 mb-1">{title}</p>
+    <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
+      <p className="text-sm font-medium text-gray-500 mb-2">{title}</p>
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-2xl font-semibold text-gray-900">{value}</p>
-          {subValue && <p className="text-xs text-gray-400 mt-1">{subValue}</p>}
+          <p className="text-3xl font-bold tracking-tight text-gray-900">
+            {value}
+          </p>
+          {subValue && <p className="text-sm text-gray-400 mt-1">{subValue}</p>}
         </div>
         {change && (
           <span
-            className={`text-xs font-medium px-2 py-0.5 rounded ${
+            className={`text-xs font-semibold px-2.5 py-1 rounded-md ${
               change.positive
                 ? "bg-emerald-50 text-emerald-600"
                 : "bg-red-50 text-red-500"
@@ -249,9 +251,9 @@ function KPICard({
           </span>
         )}
         {isWarning && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <svg
-              className="w-4 h-4 text-amber-500"
+              className="w-5 h-5 text-amber-500"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -261,7 +263,9 @@ function KPICard({
                 clipRule="evenodd"
               />
             </svg>
-            <span className="text-xs font-medium text-red-500">-0.4%</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-50 text-red-500">
+              -0.4%
+            </span>
           </div>
         )}
       </div>
@@ -340,9 +344,9 @@ export default function AuraDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 font-sans">
       {/* Sidebar */}
-      <aside className="w-56 bg-slate-900 flex flex-col fixed h-full">
+      <aside className="w-60 bg-slate-950 flex flex-col fixed h-full border-r border-white/10">
         {/* Logo */}
         <div className="px-5 py-6">
           <div className="flex items-center gap-2">
@@ -362,8 +366,8 @@ export default function AuraDashboard() {
         </div>
 
         {/* Primary Navigation */}
-        <nav className="flex-1 px-3 mt-2">
-          <ul className="space-y-1">
+        <nav className="flex-1 px-4 mt-4">
+          <ul className="space-y-2">
             {primaryNavItems.map((item) => (
               <li key={item.name}>
                 <Link
@@ -382,11 +386,11 @@ export default function AuraDashboard() {
           </ul>
 
           {/* Secondary Section */}
-          <div className="mt-8">
-            <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          <div className="mt-10">
+            <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
               Secondary
             </p>
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {secondaryNavItems.map((item) => (
                 <li key={item.name}>
                   <Link
@@ -407,8 +411,8 @@ export default function AuraDashboard() {
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="px-3 pb-4 mt-auto border-t border-slate-800 pt-4">
-          <ul className="space-y-1">
+        <div className="px-4 pb-6 mt-auto border-t border-white/10 pt-6">
+          <ul className="space-y-2">
             {bottomNavItems.map((item) => (
               <li key={item.name}>
                 <Link
@@ -435,12 +439,12 @@ export default function AuraDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-56">
+      <main className="flex-1 ml-60">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-8 py-5">
             {/* Title */}
-            <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
 
             {/* Search */}
             <div className="flex-1 max-w-md mx-8">
@@ -543,9 +547,9 @@ export default function AuraDashboard() {
         </header>
 
         {/* Dashboard Content */}
-        <div className="p-6">
+        <div className="p-8">
           {/* KPI Cards */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-4 gap-6 mb-8">
             <KPICard
               title="Total Revenue"
               value="$45,230"
@@ -561,9 +565,9 @@ export default function AuraDashboard() {
           </div>
 
           {/* Sales Chart */}
-          <div className="bg-white rounded-xl border border-gray-100 p-5 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">
                 Sales over time
               </h2>
               <div className="flex bg-gray-100 rounded-lg p-0.5">
@@ -590,30 +594,33 @@ export default function AuraDashboard() {
           {/* Bottom Section: Recent Orders & Top Products */}
           <div className="grid grid-cols-3 gap-6">
             {/* Recent Orders - Takes 2 columns */}
-            <div className="col-span-2 bg-white rounded-xl border border-gray-100 p-5">
-              <h2 className="text-base font-semibold text-gray-900 mb-4">
+            <div className="col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Recent Orders
               </h2>
               <table className="w-full">
                 <thead>
-                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <th className="pb-3">Order ID</th>
-                    <th className="pb-3">Customer</th>
-                    <th className="pb-3">Status</th>
-                    <th className="pb-3 text-right">Amount</th>
+                  <tr className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                    <th className="pb-4">Order ID</th>
+                    <th className="pb-4">Customer</th>
+                    <th className="pb-4">Status</th>
+                    <th className="pb-4 text-right">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-gray-100">
                   {recentOrders.map((order) => (
-                    <tr key={order.id} className="text-sm">
-                      <td className="py-3 text-gray-900 font-medium">
+                    <tr
+                      key={order.id}
+                      className="text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-4 text-gray-900 font-medium">
                         {order.id}
                       </td>
-                      <td className="py-3 text-gray-600">{order.customer}</td>
-                      <td className="py-3">
+                      <td className="py-4 text-gray-600">{order.customer}</td>
+                      <td className="py-4">
                         <StatusBadge status={order.status} />
                       </td>
-                      <td className="py-3 text-right text-gray-900">
+                      <td className="py-4 text-right text-gray-900 font-medium">
                         {order.amount}
                       </td>
                     </tr>
@@ -623,21 +630,24 @@ export default function AuraDashboard() {
             </div>
 
             {/* Top Selling Products - Takes 1 column */}
-            <div className="bg-white rounded-xl border border-gray-100 p-5">
-              <h2 className="text-base font-semibold text-gray-900 mb-4">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">
                 Top Selling Products
               </h2>
               <table className="w-full">
                 <thead>
-                  <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <th className="pb-3">Product Name</th>
-                    <th className="pb-3 text-right">Units Sold</th>
+                  <tr className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                    <th className="pb-4">Product Name</th>
+                    <th className="pb-4 text-right">Units Sold</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-gray-100">
                   {topProducts.map((product, index) => (
-                    <tr key={index} className="text-sm">
-                      <td className="py-3">
+                    <tr
+                      key={index}
+                      className="text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                             <svg
@@ -657,7 +667,7 @@ export default function AuraDashboard() {
                           <span className="text-gray-900">{product.name}</span>
                         </div>
                       </td>
-                      <td className="py-3 text-right text-gray-600">
+                      <td className="py-4 text-right text-gray-900 font-medium">
                         {product.unitsSold}
                       </td>
                     </tr>
